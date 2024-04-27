@@ -10,10 +10,9 @@ import matplotlib.pyplot as plt
 # Define hyperparameters
 target_length = 48000  # Target audio length
 n_mfcc = 30  # Number of MFCCs to extract
-batch_size = 32  # Batch size
+batch_size = 32 # Batch size
 epochs = 10  # Number of epochs
 learning_rate = 0.0001  # Learning rate
-
 
 # Data Preprocessing function using MFCCs
 def prepare_dataset(audio_file_paths):
@@ -21,16 +20,16 @@ def prepare_dataset(audio_file_paths):
     labels = []  # Assuming binary classification (drone vs. non-drone)
     for file_path in audio_file_paths:
         try:
-            audio, _ = tf.audio.AudioIOTensor(file_path)
-            print(audio)
-            mfccs = tf.audio.melspectrogram(audio, n_mfcc=n_mfcc)
+            audio, _ = librosa.load(file_path)
+            downsampled_audio = librosa.util.fix_length(audio, size=target_length)
+            mfccs = librosa.feature.mfcc(y=downsampled_audio, sr=48000, n_mfcc=n_mfcc)
             audio_data.append(mfccs.T)
             labels.append([1] if 'drone' in file_path.lower() else [0])
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
     print(audio_data)
-    X = X = tf.cast(np.array(audio_data), dtype=tf.float32)
-    y = tf.ones((X.shape[0], X.shape[1] // 2), dtype=tf.float32)
+    X = tf.cast(np.array(audio_data), dtype=tf.int16)
+    y = tf.ones((X.shape[0],X.shape[1] // 2), dtype=tf.int16)
 
     print(X.shape, y.shape)
     return X, y
@@ -41,7 +40,7 @@ def create_cnn_rnn_model(input_shape):
     inputs = tf.keras.Input(shape=input_shape)
 
     # Rescaling for normalization
-    normalized_audio = Rescaling(scale=1. / 127.5, offset=-1)(inputs)
+    normalized_audio = Rescaling(scale=1./127.5, offset=-1)(inputs)
 
     # 1st Conv1D layer
     conv1 = Conv1D(filters=2, kernel_size=5, activation='relu', padding='same')(normalized_audio)
@@ -58,9 +57,8 @@ def create_cnn_rnn_model(input_shape):
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
 
-
 # Load drone audio files
-drone_directory = r'drone_audio\drone_noise'
+drone_directory = r'input.wav'
 
 # Check and prepare dataset
 if os.path.exists(drone_directory) and os.path.isdir(drone_directory):
@@ -77,15 +75,18 @@ X, y = prepare_dataset(drone_files)
 # Split data into training and validation sets
 X_train, X_val, y_train, y_val = train_test_split(X.numpy(), y.numpy(), test_size=0.2, random_state=42)
 
+
 # Create and compile CNN-RNN model
 model = create_cnn_rnn_model(X_train.shape[1:])
 optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
+
+
 # Load model
-load_path = r'\saved_model\cnn_rnn_model'
+load_path = r'C:\Users\szalz\PycharmProjects\projekt\saved_model\cnn_rnn_model'
 if os.path.exists(load_path):
-    tf.keras.models.load_model(load_path + '.keras')
+    tf.keras.models.load_model(load_path +'.keras')
     print("Model loaded successfully.")
 else:
     print("No model found at the specified path.")
@@ -97,20 +98,20 @@ if os.path.exists(load_path):
 else:
     print("No weight file found at the specified path.")
 
+
 # Early stopping callback
 early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
 
 # Train the model
-history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, validation_data=(X_val, y_val),
-                    callbacks=[early_stopping])
+history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, validation_data=(X_val, y_val), callbacks=[early_stopping])
 
 # Save the model
-save_path = r'saved_model\cnn_rnn_model'
+save_path = r'C:\Users\szalz\PycharmProjects\projekt\saved_model\cnn_rnn_model'
 model.save(save_path + '.keras')
 print(f"Model saved to {save_path}")
 
 # Save the weights
-save_path = r'saved_model\cnn_rnn_model'
+save_path = r'C:\Users\szalz\PycharmProjects\projekt\saved_model\cnn_rnn_model'
 model.save_weights(save_path + '.weights.h5')
 print(f"Model weights saved to {save_path}")
 
