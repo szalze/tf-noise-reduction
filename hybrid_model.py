@@ -17,19 +17,19 @@ learning_rate = 0.0001  # Learning rate
 # Data Preprocessing function using MFCCs
 def prepare_dataset(audio_file_paths):
     audio_data = []
-    labels = []  # Assuming binary classification (drone vs. non-drone)
+    labels = []
     for file_path in audio_file_paths:
         try:
             audio, _ = librosa.load(file_path)
             downsampled_audio = librosa.util.fix_length(audio, size=target_length)
             mfccs = librosa.feature.mfcc(y=downsampled_audio, sr=48000, n_mfcc=n_mfcc)
             audio_data.append(mfccs.T)
-            labels.append([1] if 'drone' in file_path.lower() else [0])
+            labels.append([1])
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
     print(audio_data)
-    X = tf.cast(np.array(audio_data), dtype=tf.int16)
-    y = tf.ones((X.shape[0],X.shape[1] // 2), dtype=tf.int16)
+    X = tf.cast(np.array(audio_data), dtype=tf.float)
+    y = tf.ones((X.shape[0],X.shape[1] // 2), dtype=tf.float32)
 
     print(X.shape, y.shape)
     return X, y
@@ -58,7 +58,7 @@ def create_cnn_rnn_model(input_shape):
     return model
 
 # Load drone audio files
-drone_directory = r'input.wav'
+drone_directory = r'dataset\drone'
 
 # Check and prepare dataset
 if os.path.exists(drone_directory) and os.path.isdir(drone_directory):
@@ -84,7 +84,7 @@ model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accurac
 
 
 # Load model
-load_path = r'C:\Users\szalz\PycharmProjects\projekt\saved_model\cnn_rnn_model'
+load_path = r'saved_model\cnn_rnn_model'
 if os.path.exists(load_path):
     tf.keras.models.load_model(load_path +'.keras')
     print("Model loaded successfully.")
@@ -106,12 +106,12 @@ early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5
 history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, validation_data=(X_val, y_val), callbacks=[early_stopping])
 
 # Save the model
-save_path = r'C:\Users\szalz\PycharmProjects\projekt\saved_model\cnn_rnn_model'
+save_path = r'saved_model\cnn_rnn_model'
 model.save(save_path + '.keras')
 print(f"Model saved to {save_path}")
 
 # Save the weights
-save_path = r'C:\Users\szalz\PycharmProjects\projekt\saved_model\cnn_rnn_model'
+save_path = r'saved_model\cnn_rnn_model'
 model.save_weights(save_path + '.weights.h5')
 print(f"Model weights saved to {save_path}")
 
