@@ -18,13 +18,14 @@ learning_rate = 0.0001  # Learning rate
 # Data Preprocessing function using MFCCs
 def prepare_dataset(audio_file_paths):
     audio_data = []
+    labels = []  # Assuming binary classification (drone vs. non-drone)
     for file_path in audio_file_paths:
         try:
             audio, _ = tf.audio.AudioIOTensor(file_path)
             print(audio)
             mfccs = tf.audio.melspectrogram(audio, n_mfcc=n_mfcc)
             audio_data.append(mfccs.T)
-            labels.append([1])
+            labels.append([1] if 'drone' in file_path.lower() else [0])
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
     print(audio_data)
