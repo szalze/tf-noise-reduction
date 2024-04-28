@@ -67,7 +67,7 @@ def create_cnn_rnn_model(input_shape):
     return model
 
 # Load drone audio files
-drone_directory = r'dataset\drone'
+drone_directory = r'drone_noise'
 
 # Check and prepare dataset
 if os.path.exists(drone_directory) and os.path.isdir(drone_directory):

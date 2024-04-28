@@ -32,7 +32,7 @@ def filter_audio(model_path, audio_tensor):
     return filtered_audio
 
 # Hangfájl betöltése és előfeldolgozása
-audio_path = r'C:\drone dataset\szurendo.wav'
+audio_path = r'input'
 audio_tensor = load_and_preprocess_audio(audio_path)
 
 # Súlyfájl betöltése és hangszegmensek szűrése

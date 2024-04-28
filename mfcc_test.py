@@ -16,7 +16,7 @@ def wav_to_mfcc(input_file, output_file):
 
 
 # MFCC-ekből hangfájl visszaállítása
-def mfcc_to_wav(input_file, output_file, sr=22050):
+def mfcc_to_wav(input_file, output_file, sr=48000):
     # MFCC-k betöltése
     mfccs = np.load(input_file)
 
@@ -38,6 +38,6 @@ def convert_wav(input_file, output_file):
 
 
 # Teszt
-input_file = r"C:\drone dataset\Lajcsi\stereo_split\stereo_split_002.wav"
-output_file = r"C:\Users\szalz\PycharmProjects\projekt\mffc_output\output1.wav"
+input_file = r"input"
+output_file = r"output/mfcc_out.wav"
 convert_wav(input_file, output_file)
