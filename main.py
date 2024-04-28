@@ -1,46 +1,49 @@
 import tensorflow as tf
-import os
-from tensorflow.keras import layers, models
+import librosa
+import numpy as np
+import soundfile as sf
 
-os.environ['TF_ENApipBLE_ONEDNN_OPTS'] = '0'
+# Hangfájlok betöltése és előfeldolgozása
+def load_and_preprocess_audio(file_path, sample_rate=48000):
+    audio, _ = librosa.load(file_path, sr=sample_rate)
+    audio_tensor = tf.convert_to_tensor(audio)
 
-# Függvény a .wav fájlok betöltéséhez és feldolgozásához
-def load_and_preprocess_wav(file_path):
-    # Betöltés
-    audio_binary = tf.io.read_file(file_path)
-    # Feldolgozás, például normalizálás, jellemző kinyerése stb.
-    # Ide illeszthetsz zajszűrési vagy jellemző kinyerési logikát
-    # Egy példa: normalizálás
-    audio, _ = tf.audio.decode_wav(audio_binary)
-    audio = tf.squeeze(audio, axis=-1)  # Több csatornás audio esetén
-    normalized_audio = audio / tf.math.reduce_max(audio)
-    return normalized_audio
+    normalized_audio = tf.keras.layers.Rescaling(scale=1. / 127.5, offset=-1)(audio_tensor)
 
-# Függvény a .wav fájlok listájának előállításához
-def get_wav_files_list(directory):
-    wav_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.wav')]
-    return wav_files
+    # MFCC tenzor kiterjesztése
+    #audio_tensor_reshaped = tf.expand_dims(normalized_audio, axis=0)  # Batch dimenzió hozzáadása
+    # audio_tensor_reshaped = tf.expand_dims(audio_tensor_reshaped, axis=-1)  # Utolsó dimenzió hozzáadása
+    audio_tensor_reshaped = tf.convert_to_tensor(normalized_audio, dtype=tf.float32)
+    audio_tensor_reshaped = tf.stack([tf.ones((94, 30), dtype=tf.float32)])
+    return audio_tensor_reshaped
 
-# Függvény a TensorFlow Record-ok létrehozásához
-def create_tf_record(wav_files, output_file):
-    with tf.io.TFRecordWriter(output_file) as writer:
-        for wav_file in wav_files:
-            # .wav fájl betöltése és feldolgozása
-            audio_data = load_and_preprocess_wav(wav_file)
-            # TensorFlow Record létrehozása
-            example = tf.train.Example(features=tf.train.Features(feature={
-                'audio': tf.train.Feature(float_list=tf.train.FloatList(value=audio_data.numpy()))
-            }))
-            # TFRecord írása
-            writer.write(example.SerializeToString())
+# Hangszegmensek szűrése a betanított modell súlyainak betöltésekor
+def filter_audio(model_path, audio_tensor):
+    try:
+        # Teljes modell betöltése a .keras fájlból
+        model = tf.keras.models.load_model(model_path)
+        print("Keras model loaded successfully.")
+    except (OSError, ValueError):
+        print("Failed to load the Keras model.")
+        return None
 
-# A .wav fájlok elérési útvonala
-wav_directory = 'noisy_files'
-# TFRecord kimeneti fájl elérési útvonala
-output_tfrecord_file = 'output.tfrecord'
+    # Hangszegmensek szűrése a betanított modell súlyainak betöltésekor
+    filtered_audio = model(audio_tensor)
+    return filtered_audio
 
-# .wav fájlok betöltése és feldolgozása
-wav_files = get_wav_files_list(wav_directory)
-# TensorFlow Record-ok létrehozása
-create_tf_record(wav_files, output_tfrecord_file)
+# Hangfájl betöltése és előfeldolgozása
+audio_path = r'C:\drone dataset\szurendo.wav'
+audio_tensor = load_and_preprocess_audio(audio_path)
 
+# Súlyfájl betöltése és hangszegmensek szűrése
+model_path = r'saved_model\cnn_rnn_model.keras'
+filtered_audio = filter_audio(model_path, audio_tensor)
+
+# Tenzor visszaalakítása hanganyaggá
+filtered_audio_np = filtered_audio.numpy()
+#filtered_audio_np = np.squeeze(filtered_audio_np)  # Eltávolítja a felesleges dimenziót
+print(filtered_audio_np)
+
+# Szűrt hangfájl mentése
+output_file_path = r'output\output_file.wav'
+sf.write(output_file_path, filtered_audio_np, 48000)
