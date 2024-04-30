@@ -4,7 +4,7 @@ import numpy as np
 import librosa
 from sklearn.model_selection import train_test_split
 import os
-from tensorflow.keras.layers import LSTM, Rescaling, Conv1D, MaxPooling1D, SimpleRNN, Dense, TimeDistributed, Dropout
+from tensorflow.keras.layers import LSTM, Rescaling, Conv1D, MaxPooling1D, Dense, TimeDistributed, Dropout
 import matplotlib.pyplot as plt
 
 # Define hyperparameters
@@ -43,7 +43,7 @@ def create_cnn_rnn_model(input_shape):
     normalized_audio = Rescaling(scale=1./127.5, offset=-1)(inputs)
 
     # 1st Conv1D layer
-    conv1 = Conv1D(filters=2, kernel_size=5, activation='relu', padding='same')(normalized_audio)
+    conv1 = Conv1D(filters=8, kernel_size=3, activation='relu', padding='same')(normalized_audio)
 
     # Dropout
     dp1 = Dropout(0.2)(conv1)
@@ -65,6 +65,8 @@ def create_cnn_rnn_model(input_shape):
 
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
+
+
 
 # Load drone audio files
 drone_directory = r'drone_noise'
@@ -91,21 +93,16 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 
-
 # Load model
-load_path = r'saved_model\cnn_rnn_model'
+load_path = r'saved_model\cnn_rnn_model.keras'
 if os.path.exists(load_path):
-    model = tf.keras.models.load_model(load_path + '.keras')
+    model = tf.keras.models.load_model(load_path)
     print("Model loaded successfully.")
 else:
     print("No model found at the specified path.")
 
-# Load weights
-if os.path.exists(load_path):
-    model = model.load_weights(load_path + '.weights.h5')
-    print("Weights loaded successfully.")
-else:
-    print("No weight file found at the specified path.")
+
+
 
 
 # Early stopping callback
