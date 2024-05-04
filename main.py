@@ -11,10 +11,10 @@ def load_and_preprocess_audio(file_path, sample_rate=48000):
     normalized_audio = tf.keras.layers.Rescaling(scale=1. / 127.5, offset=-1)(audio_tensor)
 
     # MFCC tenzor kiterjesztése
-    #audio_tensor_reshaped = tf.expand_dims(normalized_audio, axis=0)  # Batch dimenzió hozzáadása
-    # audio_tensor_reshaped = tf.expand_dims(audio_tensor_reshaped, axis=-1)  # Utolsó dimenzió hozzáadása
-    audio_tensor_reshaped = tf.convert_to_tensor(normalized_audio, dtype=tf.float32)
-    audio_tensor_reshaped = tf.stack([tf.ones((94, 30), dtype=tf.float32)])
+    audio_tensor_reshaped = tf.expand_dims(normalized_audio, axis=0)  # Batch dimenzió hozzáadása
+    audio_tensor_reshaped = tf.expand_dims(audio_tensor_reshaped, axis=-1)  # Utolsó dimenzió hozzáadása
+    # audio_tensor_reshaped = tf.convert_to_tensor(normalized_audio, dtype=tf.float32)
+    # audio_tensor_reshaped = tf.stack([tf.ones((94, 30), dtype=tf.float32)])
     return audio_tensor_reshaped
 
 # Hangszegmensek szűrése a betanított modell súlyainak betöltésekor
@@ -32,7 +32,7 @@ def filter_audio(model_path, audio_tensor):
     return filtered_audio
 
 # Hangfájl betöltése és előfeldolgozása
-audio_path = r'input'
+audio_path = r'input\szurendo.wav'
 audio_tensor = load_and_preprocess_audio(audio_path)
 
 # Súlyfájl betöltése és hangszegmensek szűrése
