@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 target_length = 48000  # Target audio length
 n_mfcc = 30  # Number of MFCCs to extract
 batch_size = 64 # Batch size
-epochs = 10  # Number of epochs
+epochs = 100  # Number of epochs
 learning_rate = 0.0001  # Learning rate
 
 # Data Preprocessing function using MFCCs
