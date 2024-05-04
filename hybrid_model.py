@@ -2,7 +2,6 @@ import glob
 import tensorflow as tf
 import numpy as np
 import librosa
-from sklearn.model_selection import train_test_split
 import os
 from tensorflow.keras.layers import LSTM, Rescaling, Conv1D, MaxPooling1D, Dense, TimeDistributed, Dropout
 import matplotlib.pyplot as plt
